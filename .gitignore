@@ -1,0 +1,19 @@
+# Node modules
+node_modules/
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Build output
+dist/
+build/
+
+# OS-specific
+.DS_Store
+Thumbs.db
