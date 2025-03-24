@@ -1,19 +1,7 @@
-# Node modules
 node_modules/
-
-# Logs
-logs
-*.log
-
-# Runtime data
-pids
-*.pid
-*.seed
-
-# Build output
+.env
 dist/
 build/
-
-# OS-specific
+npm-debug.log*
+yarn-debug.log*
 .DS_Store
-Thumbs.db
