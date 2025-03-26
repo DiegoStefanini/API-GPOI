@@ -4,6 +4,9 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import dotenv from "dotenv";
 import mysql from "mysql2/promise";
 import {RowDataPacket } from 'mysql2/promise';
+import path from 'path';
+
+
 dotenv.config(); // carica variabili da .env
 const secret = process.env.JWT_SECRET;
 
@@ -105,7 +108,7 @@ app.get("/micro", async (req, res) => {
         res.json(result);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Errore durante la registrazione micro" });
+        res.status(500).json({ error: "Errore durante la get del micro" });
     }
 });
 
@@ -155,7 +158,89 @@ app.put("/micro", async (req, res) => {
     }
 });
 
-// /InsDati: inserisce dati nella tabella "dati"
+// richieste /dati
+
+app.get("/dati", async (req, res) => {
+    const { idMicro } = req.body;
+
+    // Controlla se il token è presente
+    if (!idMicro) {
+        res.status(401).json({ error: "idMicro mancante" });
+        return 
+    }
+
+    try {
+
+        // Inseriamo i dati nella tabella "dati"
+        const [result] = await pool.query(
+            "SELECT * FROM dati WHERE idMicro = ?",
+            [idMicro]
+        );
+        res.json(result);
+
+    } catch (error) {
+        console.error("Errore sconosciuto:", error);
+        res.status(500).json({ error: "Errore sconosciuto" });
+        return   
+    }
+});
+
+
+
+app.delete("/dati", async (req, res) => {
+    const { token, idMicro } = req.body;
+  
+    // 1. Controllo Token
+    if (!token) {
+        res.status(401).json({ error: "Token mancante" });
+        return;
+    }
+    // 2. Controllo MAC
+    if (!idMicro) {
+        res.status(400).json({ error: "idMicro mancante" });
+        return;
+    }
+  
+    try {
+        const decoded = jwt.verify(token, secret) as JwtPayload;
+        console.log("decoded token:", decoded);
+    
+        // 3. Controllo permessi (admin O micro O web)
+        if (decoded.permessi !== "admin" && decoded.permessi !== "micro" && decoded.permessi !== "web") {
+            res.status(403).json({ error: "Non hai i permessi per inserire dati" });
+            return;
+        }
+    
+        // Costruiamo la query finale
+        // il controllo se non è stato eliminato nulla lo fa chi lo usa
+        const [result] = await pool.query("DELETE FROM dati WHERE idMicro = ?", [idMicro]);
+
+        res.json({ result });
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.name === "TokenExpiredError") {
+                console.error("Token scaduto:", error.message);
+                res.status(401).json({ error: "Token scaduto" });
+                return;
+            } else if (error.name === "JsonWebTokenError") {
+                console.error("Token non valido:", error.message);
+                res.status(403).json({ error: "Token non valido" });
+                return;
+            } else {
+                console.error(error);
+                res.status(500).json({ error: "Errore durante la modifica di micro" });
+                return;
+            }
+        } else {
+            console.error(error);
+            res.status(500).json({ error: "Errore sconosciuto" });
+            return;
+        }
+    }
+});
+
+
+
 app.put("/dati", async (req, res) => {
     const { token, co2, pm10, pm2_5, idMicro, latitude, longitude } = req.body;
 
@@ -340,6 +425,14 @@ app.delete("/micro", async (req, res) => {
 });
 
 
+app.get("/documentazione", async (req, res) => { 
+    const filePath = path.join(__dirname, 'public', 'documentazione.html');
+    res.sendFile(filePath);
+})
+
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
+
+
+

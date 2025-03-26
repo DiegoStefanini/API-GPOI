@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <title>Documentazione API-GPOI</title>
+  <style>
+    /* Reset di base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: sans-serif;
+    }
+
+    body {
+      background: #f4f4f4;
+      padding: 20px;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      margin-bottom: 0.4rem;
+    }
+
+    header p {
+      font-size: 1.1rem;
+      color: #666;
+    }
+
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2, h3 {
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #444;
+    }
+
+    p, li {
+      margin-bottom: 0.75rem;
+    }
+
+    code {
+      background: #eee;
+      padding: 2px 6px;
+      font-size: 0.95rem;
+      border-radius: 3px;
+    }
+
+    pre {
+      background: #333;
+      color: #eee;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      overflow-x: auto;
+    }
+
+    section {
+      margin-bottom: 30px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+
+    /* Link di ritorno all'indice */
+    .back-to-top {
+      display: inline-block;
+      margin-top: 20px;
+      text-decoration: none;
+      background: #3498db;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 4px;
+      transition: background 0.3s ease;
+    }
+
+    .back-to-top:hover {
+      background: #2980b9;
+    }
+
+    /* Toc (table of contents) */
+    .toc {
+      margin-bottom: 2rem;
+      padding-left: 1rem;
+    }
+
+    .toc li {
+      list-style-type: square;
+      margin-bottom: 5px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Documentazione API-GPOI</h1>
+    <p>
+      <a href="https://github.com/DiegoStefanini/API-GPOI" target="_blank">
+        https://github.com/DiegoStefanini/API-GPOI
+      </a>
+    </p>
+  </header>
+  
+
+  <main>
+    <!-- Indice dei contenuti -->
+    <nav>
+      <h2>Indice</h2>
+      <ul class="toc">
+        <li><a href="#introduzione">Introduzione</a></li>
+        <li><a href="#setup">Setup Progetto</a></li>
+        <li><a href="#endpoints">Endpoint</a>
+          <ul>
+            <li><a href="#registra">/registra (POST)</a></li>
+            <li><a href="#login">/login (POST)</a></li>
+            <li><a href="#get-micro">/micro (GET)</a></li>
+            <li><a href="#put-micro">/micro (PUT)</a></li>
+            <li><a href="#post-micro">/micro (POST)</a></li>
+            <li><a href="#delete-micro">/micro (DELETE)</a></li>
+            <li><a href="#get-dati">/dati (GET)</a></li>
+            <li><a href="#put-dati">/dati (PUT)</a></li>
+            <li><a href="#delete-dati">/dati (DELETE)</a></li>
+          </ul>
+        </li>
+        <li><a href="#note-permessi">Note su Autenticazione e Permessi</a></li>
+        <li><a href="#conclusioni">Conclusioni e Miglioramenti</a></li>
+      </ul>
+    </nav>
+
+    <section id="introduzione">
+      <h2>Introduzione</h2>
+      <p>
+        Questa API è stata sviluppata utilizzando Node.js, Express e TypeScript. 
+        Fornisce funzionalità per la gestione di utenti, dispositivi "micro" e dati correlati.
+      </p>
+      <ul>
+        <li>Registrazione/Login utente con password cifrata (bcrypt).</li>
+        <li>Generazione/validazione di token JWT per autenticazione.</li>
+        <li>CRUD su entità "micro" e "dati".</li>
+      </ul>
+    </section>
+
+    <section id="setup">
+      <h2>Setup Progetto</h2>
+      <ol>
+        <li>Clonare o scaricare il progetto.</li>
+        <li>Eseguire <code>npm install</code> per installare le dipendenze.</li>
+        <li>
+          Creare un file <code>.env</code> contenente la variabile d'ambiente 
+          <code>JWT_SECRET</code>. Esempio:
+          <pre>
+JWT_SECRET=scemo123
+          </pre>
+        </li>
+        <li>
+          Configurare la connessione a MySQL sostituendo host, user, password, e database nel file 
+          <code>index.ts</code>:
+          <pre>
+const pool = mysql.createPool({
+  host: "localhost",
+  user: "root",
+  password: "",
+  database: "gpo"
+});
+          </pre>
+        </li>
+        <li>
+          Avviare il server con <code>npm run start</code> o (in fase di sviluppo) 
+          <code>npm run dev</code>.
+        </li>
+      </ol>
+    </section>
+
+    <section id="endpoints">
+      <h2>Endpoint</h2>
+      <p>
+        Di seguito, la lista completa degli endpoint con esempi di chiamata e 
+        possibili risposte.
+      </p>
+
+      <!-- /registra (POST) -->
+      <article id="registra">
+        <h3>/registra (POST)</h3>
+        <p><strong>Descrizione</strong>: Registra un nuovo utente, salvando la password in forma hashed con bcrypt.</p>
+        <p><strong>Body (JSON)</strong>:</p>
+        <pre>{
+  "nome": "string",
+  "password": "string"
+}</pre>
+        
+        <p><strong>Risposte</strong>:</p>
+        <ul>
+          <li><code>200</code> – <code>{ "status": "ok" }</code></li>
+          <li><code>500</code> – Errore nella registrazione sul database</li>
+        </ul>
+        <a class="back-to-top" href="#indice">Torna all'indice</a>
+      </article>
+
+      <!-- /login (POST) -->
+      <article id="login">
+        <h3>/login (POST)</h3>
+        <p><strong>Descrizione</strong>: Verifica la combinazione <code>nome</code>/<code>password</code> e restituisce un token JWT.</p>
+        <p><strong>Body (JSON)</strong>:</p>
+        <pre>{
+  "nome": "string",
+  "password": "string"
+}</pre>
+       
+        <p><strong>Risposte</strong>:</p>
+        <ul>
+          <li><code>200</code> – <code>{ "token": "..." }</code></li>
+          <li><code>401</code> – Nome utente non trovato o password errata</li>
+          <li><code>500</code> – Errore generico del server</li>
+        </ul>
+        <a class="back-to-top" href="#indice">Torna all'indice</a>
+      </article>
+
+      <!-- /micro (GET) -->
+      <article id="get-micro">
+        <h3>/micro (GET)</h3>
+        <p><strong>Descrizione</strong>: Recupera informazioni di un micro dal database in base al campo <code>mac</code>.</p>
+        <p><strong>Body (JSON)</strong>:</p>
+        <pre>{
+  "mac": "string"
+}</pre>
+       
+        <p><strong>Risposte</strong>:</p>
+        <ul>
+          <li><code>200</code> – Restituisce array o oggetto con le informazioni sul micro</li>
+          <li><code>401</code> – <code>mac</code> mancante</li>
+          <li><code>500</code> – Errore nel recupero dal database</li>
+        </ul>
+        <a class="back-to-top" href="#indice">Torna all'indice</a>
+      </article>
+
+      <!-- /micro (PUT) -->
+      <article id="put-micro">
+        <h3>/micro (PUT)</h3>
+        <p><strong>Descrizione</strong>: Inserisce un nuovo record nella tabella <code>micro</code>. Richiede un <code>token</code> valido con permessi <code>admin</code> o <code>micro</code>.</p>
+        <p><strong>Body (JSON)</strong>:</p>
+        <pre>{
+  "token": "string",
+  "mac": "string",
+  "latitude": "number",
+  "longitude": "number"
+}</pre>
+        
+        <p><strong>Risposte</strong>:</p>
+        <ul>
+          <li><code>200</code> – <code>{ "status": "ok" }</code></li>
+          <li><code>401</code> – Mancanza di <code>token</code> o parametri <code>mac</code>, <code>latitude</code>, <code>longitude</code></li>
+          <li><code>403</code> – Permessi insufficienti o token non valido</li>
+          <li><code>500</code> – Errore di salvataggio su DB</li>
+        </ul>
+        <a class="back-to-top" href="#indice">Torna all'indice</a>
+      </article>
+
+      <!-- /micro (POST) -->
+      <article id="post-micro">
+        <h3>/micro (POST)</h3>
+        <p><strong>Descrizione</strong>: Aggiorna campi di un micro in base al <code>mac</code> (es. <code>latitude</code>, <code>longitude</code>, <code>attivo</code>). Richiede un <code>token</code> valido con permessi <code>admin</code>, <code>micro</code> o <code>web</code>.</p>
+        <p><strong>Body (JSON)</strong>:</p>
+        <pre>{
+  "token": "string",
+  "mac": "string",
+  "latitude": "number (opzionale)",
+  "longitude": "number (opzionale)",
+  "attivo": "boolean (opzionale)"
+}</pre>
+        <p>I campi non presenti o <code>undefined</code> non verranno aggiornati.</p>
+
+        <p><strong>Risposte</strong>:</p>
+        <ul>
+          <li><code>200</code> – <code>{ "status": "ok", "result": ... }</code></li>
+          <li><code>400</code> – Parametri mancanti o nessun campo da modificare</li>
+          <li><code>401</code> – Token mancante</li>
+          <li><code>403</code> – Permessi insufficienti o token non valido</li>
+          <li><code>500</code> – Errore di query o server</li>
+        </ul>
+        <a class="back-to-top" href="#indice">Torna all'indice</a>
+      </article>
+
+      <!-- /micro (DELETE) -->
+      <article id="delete-micro">
+        <h3>/micro (DELETE)</h3>
+        <p><strong>Descrizione</strong>: Elimina un record dalla tabella <code>micro</code> per <code>mac</code>. Richiede un <code>token</code> valido con permessi <code>admin</code>, <code>micro</code> o <code>web</code>.</p>
+        <p><strong>Body (JSON)</strong>:</p>
+        <pre>{
+  "token": "string",
+  "mac": "string"
+}</pre>
+       
+        <p><strong>Risposte</strong>:</p>
+        <ul>
+          <li><code>200</code> – <code>{ "result": ... }</code> con info sull'operazione</li>
+          <li><code>400</code> – <code>mac</code> mancante</li>
+          <li><code>401</code> – Token mancante</li>
+          <li><code>403</code> – Permessi insufficienti o token non valido</li>
+          <li><code>500</code> – Errore del server o del database</li>
+        </ul>
+        <a class="back-to-top" href="#indice">Torna all'indice</a>
+      </article>
+
+      <!-- /dati (GET) -->
+      <article id="get-dati">
+        <h3>/dati (GET)</h3>
+        <p><strong>Descrizione</strong>: Restituisce tutti i dati relativi a un determinato <code>idMicro</code>.</p>
+        <p><strong>Body (JSON)</strong>:</p>
+        <pre>{
+  "idMicro": "number"
+}</pre>
+        
+        <p><strong>Risposte</strong>:</p>
+        <ul>
+          <li><code>200</code> – Array di oggetti corrispondenti</li>
+          <li><code>401</code> – <code>idMicro</code> mancante</li>
+          <li><code>500</code> – Errore del server</li>
+        </ul>
+        <a class="back-to-top" href="#indice">Torna all'indice</a>
+      </article>
+
+      <!-- /dati (PUT) -->
+      <article id="put-dati">
+        <h3>/dati (PUT)</h3>
+        <p><strong>Descrizione</strong>: Inserisce un nuovo record di dati (<code>co2</code>, <code>pm10</code>, <code>pm2_5</code>, ecc.) per un determinato <code>idMicro</code>. Richiede <code>token</code> con permessi <code>admin</code> o <code>micro</code>.</p>
+        <p><strong>Body (JSON)</strong>:</p>
+        <pre>{
+  "token": "string",
+  "co2": "number",
+  "pm10": "number",
+  "pm2_5": "number",
+  "idMicro": "number",
+  "latitude": "number",
+  "longitude": "number"
+}</pre>
+        <p><strong>Nota</strong>: Nel codice è presente una condizione con <code>||</code> invece di <code>&&</code> che potrebbe bloccare l'inserimento.</p>
+
+        <p><strong>Risposte</strong>:</p>
+        <ul>
+          <li><code>200</code> – <code>{ "result": ... }</code></li>
+          <li><code>401</code> – Token mancante</li>
+          <li><code>403</code> – Permessi insufficienti o token non valido</li>
+          <li><code>500</code> – Errore del server</li>
+        </ul>
+        <a class="back-to-top" href="#indice">Torna all'indice</a>
+      </article>
+
+      <!-- /dati (DELETE) -->
+      <article id="delete-dati">
+        <h3>/dati (DELETE)</h3>
+        <p><strong>Descrizione</strong>: Elimina i dati relativi a <code>idMicro</code>. Richiede un <code>token</code> con permessi <code>admin</code>, <code>micro</code> o <code>web</code>.</p>
+        <p><strong>Body (JSON)</strong>:</p>
+        <pre>{
+  "token": "string",
+  "idMicro": "number"
+}</pre>
+       
+        <p><strong>Risposte</strong>:</p>
+        <ul>
+          <li><code>200</code> – <code>{ "result": ... }</code></li>
+          <li><code>400</code> – <code>idMicro</code> mancante</li>
+          <li><code>401</code> – Token mancante</li>
+          <li><code>403</code> – Permessi insufficienti o token non valido</li>
+          <li><code>500</code> – Errore del server o DB</li>
+        </ul>
+        <a class="back-to-top" href="#indice">Torna all'indice</a>
+      </article>
+    </section>
+
+    <section id="note-permessi">
+      <h2>Note su Autenticazione e Permessi</h2>
+      <p>
+        Gli endpoint (tranne <code>/registra</code>, <code>/login</code> e <code>GET /micro</code> 
+        con il solo body <code>mac</code>) richiedono un <strong>token JWT</strong>. 
+        Il token si trova nel body della richiesta (campo <code>token</code>).
+      </p>
+      <p>Esempi di errori sul token:</p>
+      <ul>
+        <li><strong>Token scaduto</strong>: <code>401</code> Token scaduto</li>
+        <li><strong>Token non valido</strong>: <code>403</code> Token non valido</li>
+      </ul>
+      <p><strong>Permessi</strong>:</p>
+      <ul>
+        <li><code>admin</code>: accesso totale</li>
+        <li><code>micro</code>: dispositivi che inviano dati</li>
+        <li><code>web</code>: permessi intermedi, per la visualizzazione/gestione front-end</li>
+      </ul>
+      <a class="back-to-top" href="#indice">Torna all'indice</a>
+    </section>
+
+    <section id="conclusioni">
+      <h2>Possibili cose da fare o da migliorare</h2>
+      <ul>
+        <li>
+          <strong>Gestione dell’autorizzazione</strong>: 
+          Assicurarsi che la logica dei permessi in tutti gli endpoint sia corretta 
+          (controllare l’uso di <code>||</code> o <code>&&</code>).
+        </li>
+        <li>
+          <strong>Validazione Input</strong>: 
+          Possibile uso di librerie come <code>Joi</code> o <code>class-validator</code>.
+        </li>
+       
+      </ul>
+      <a class="back-to-top" href="#indice">Torna all'indice</a>
+    </section>
+
+  </main>
+
+</body>
+</html>
